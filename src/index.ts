@@ -15,7 +15,7 @@ app.use('/api/v1/products', productRoutes);
 app.use(express.static(path.join(__dirname, '../public'))); 
 
 
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
   app.listen(3000, () => {
     console.log('Server is running on port 3000');
   });
