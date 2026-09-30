@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 flex justify-center items-center h-screen">
 
   <div class="bg-white p-8 rounded-lg shadow-md w-80">
@@ -15,8 +17,7 @@
       class="w-full p-3 mb-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
     <input type="password" id="password" placeholder="Mật khẩu"
       class="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
-    <button onclick="login()"
-      class="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold">
+    <button onclick="login()" class="w-full p-3 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold">
       Đăng nhập
     </button>
   </div>
@@ -37,7 +38,8 @@
         const data = await res.json();
 
         if (res.ok) {
-          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('token', data.accessToken);
+          sessionStorage.setItem('refreshToken', data.refreshToken);
           window.location.href = '/index.html';
         } else {
           error.classList.remove('hidden');
@@ -50,4 +52,5 @@
     }
   </script>
 </body>
+
 </html>

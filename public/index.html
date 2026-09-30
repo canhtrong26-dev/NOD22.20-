@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý sản phẩm</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100 p-6">
 
   <!-- Header -->
   <div class="flex justify-between items-center mb-6">
     <h2 class="text-2xl font-bold">Quản lý sản phẩm</h2>
     <div class="flex gap-3">
-      <button class="admin-only hidden bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 font-semibold" onclick="openModal()">+ Thêm sản phẩm</button>
+      <button class="admin-only hidden bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 font-semibold"
+        onclick="openModal()">+ Thêm sản phẩm</button>
       <button class="bg-gray-500 text-white px-5 py-2 rounded hover:bg-gray-600" onclick="logout()">Đăng xuất</button>
     </div>
   </div>
@@ -42,8 +45,10 @@
         class="w-full p-3 mb-3 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
       <input type="number" id="productPrice" placeholder="Giá"
         class="w-full p-3 mb-4 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
-      <button class="w-full p-3 bg-green-600 text-white rounded hover:bg-green-700 font-semibold" onclick="saveProduct()">Lưu</button>
-      <button class="w-full p-3 bg-gray-500 text-white rounded hover:bg-gray-600 mt-2" onclick="closeModal()">Hủy</button>
+      <button class="w-full p-3 bg-green-600 text-white rounded hover:bg-green-700 font-semibold"
+        onclick="saveProduct()">Lưu</button>
+      <button class="w-full p-3 bg-gray-500 text-white rounded hover:bg-gray-600 mt-2"
+        onclick="closeModal()">Hủy</button>
     </div>
   </div>
 
@@ -57,16 +62,45 @@
 
     // HÀM TỰ TẠO — gọi API với token
     async function fetchWithAuth(url, options = {}) {
+      let currentToken = sessionStorage.getItem('token');
+
       options.headers = {
         ...options.headers,
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
+        'Authorization': 'Bearer ' + currentToken
       };
-      const res = await fetch(url, options);
+
+      let res = await fetch(url, options);
+
       if (res.status === 401) {
-        sessionStorage.removeItem('token');
-        window.location.href = '/login.html';
+        const data = await res.json();
+
+        if (data.expired) {
+          const refreshToken = sessionStorage.getItem('refreshToken');
+          const refreshRes = await fetch('/auth/refresh-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken })
+          });
+
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json();
+            sessionStorage.setItem('token', refreshData.accessToken);
+
+            options.headers['Authorization'] = 'Bearer ' + refreshData.accessToken;
+            res = await fetch(url, options);
+          } else {
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('refreshToken');
+            window.location.href = '/login.html';
+          }
+        } else {
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('refreshToken');
+          window.location.href = '/login.html';
+        }
       }
+
       return res;
     }
 
@@ -121,7 +155,7 @@
             await fetchWithAuth('/api/v1/products/' + testData.id, { method: 'DELETE' });
           }
         }
-      } catch (err) {}
+      } catch (err) { }
     }
 
     // HÀM TỰ TẠO — mở modal thêm
@@ -216,4 +250,5 @@
     init();
   </script>
 </body>
+
 </html>
